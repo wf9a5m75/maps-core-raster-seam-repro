@@ -1,0 +1,14 @@
+{
+  "device": "Pixel 5a / Android 14 / arm64-v8a",
+  "threshold": "all RGB < 100",
+  "before_label_heights_px": [
+    98,
+    103
+  ],
+  "after_label_heights_px": [
+    102,
+    102
+  ],
+  "input_pngs_reconstruct_source_exactly": true,
+  "unmasked_map_pixel_identical": true
+}
