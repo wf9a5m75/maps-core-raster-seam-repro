@@ -119,3 +119,45 @@ adb exec-out screencap -p > device-screen.png
 
 The source bitmap is generated on the test device, so glyph rasterization is
 consistent within each run even if a different device has different fonts.
+
+## Additional real-map screenshots (MapConductor examples-app)
+
+The independent OMM/Canvas reproduction above isolates the cause. The following
+supplement shows how the same issue appears on a geographic map in
+MapConductor's Android examples-app.
+
+![MapConductor map before/after](evidence/mapconductor/map-comparison.png)
+
+The red box marks **美里町 (Misato)** crossing the boundary between label tiles
+`11/1815/802` and `11/1815/803`; the blue box marks **寄居町 (Yorii)** inside a
+tile. Both labels use the same style text size.
+
+![Label crops at 4x](evidence/mapconductor/label-comparison.png)
+
+| Version | 美里町 / crossing seam | 寄居町 / inside tile |
+| --- | ---: | ---: |
+| Stock OMM 4.0.0 | 25px | 30px |
+| Patched OMM | 29px | 29px |
+
+These fresh Pixel 5a / Android 14 captures were made on 2026-10-07 using
+`MapConductor/android-sdk` commit `fe089261`, provider Open Mobile Maps,
+**As basemap**, Auto tile size, opacity 1, bearing/tilt 0. Camera center:
+latitude **36.153**, longitude **139.189**, application zoom **12**. The auto
+raster grid uses logical 512dp tiles with 1024px label images at this location.
+
+For deterministic startup, only the example page's initial camera and initial
+As-basemap toggle were temporarily changed for the capture build; the source
+was restored afterward. Both comparison APKs use that same build. Comparing
+all APK entries (apart from signing metadata) finds exactly one changed entry:
+`lib/arm64-v8a/libmapscore.so`. The patched library is the same upstream-main
+build used for the standalone test. MapConductor code, vector renderer, PNG
+cache, map data and camera settings are identical across the pair.
+
+[Original before](evidence/mapconductor/before.png) and
+[original after](evidence/mapconductor/after.png) are unannotated screenshots.
+The overview adds colored boxes and scales the whole screenshots to half size;
+label crops use 4x nearest-neighbor enlargement to expose the original pixels.
+[Measurements](evidence/mapconductor/measurements.json) record crop coordinates
+and text bounds using all RGB components below 125. These pixel bounds depend
+on sampling and are not font size specifications. Map attribution is retained
+in the full captures.
