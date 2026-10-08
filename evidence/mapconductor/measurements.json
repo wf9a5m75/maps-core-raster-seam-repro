@@ -1,0 +1,66 @@
+{
+  "before": {
+    "Misato": {
+      "height_px": 25,
+      "crop_box": [
+        420,
+        920,
+        560,
+        985
+      ],
+      "ink_bounds_in_crop": [
+        19,
+        16,
+        115,
+        41
+      ]
+    },
+    "Yorii": {
+      "height_px": 30,
+      "crop_box": [
+        490,
+        1460,
+        650,
+        1540
+      ],
+      "ink_bounds_in_crop": [
+        33,
+        31,
+        130,
+        61
+      ]
+    }
+  },
+  "after": {
+    "Misato": {
+      "height_px": 29,
+      "crop_box": [
+        420,
+        920,
+        560,
+        985
+      ],
+      "ink_bounds_in_crop": [
+        18,
+        14,
+        113,
+        43
+      ]
+    },
+    "Yorii": {
+      "height_px": 29,
+      "crop_box": [
+        490,
+        1460,
+        650,
+        1540
+      ],
+      "ink_bounds_in_crop": [
+        31,
+        32,
+        128,
+        61
+      ]
+    }
+  }
+}
