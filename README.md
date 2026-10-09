@@ -56,11 +56,16 @@ adb shell am start -n com.example.ommseam/.MainActivity --ez mask false
 
 ## Build the patched native library and compare
 
-`patches/flat-masked-raster-overlap.patch` changes one C++ call: for flat raster
-layers using stencil tile masking, the texture quad uses zero overlap. Unmasked
-and globe layers keep the existing `1/512` overlap, and mask-tile geometry is
-unchanged. Expanding a texture quad before clipping it to the original tile's
-stencil mask discards image rows/columns at the boundary.
+`patches/flat-masked-raster-overlap.patch` expands both the quad and its UV
+coordinates by `1/512` for flat raster layers using stencil masking. The image
+mapping inside the tile stays unchanged; GL_CLAMP_TO_EDGE fills the expanded
+edge. This avoids compressed glyphs without opening subpixel gaps during zoom.
+Unmasked, globe, and mask-tile-geometry paths retain their existing behavior.
+
+The older Pixel 5a evidence below used the first, zero-overlap proposal. It
+isolates the texture compression problem, but zero overlap can leave thin gaps
+when overzooming. The current patch supersedes that proposal; see the latest
+Lenovo validation at the end of this document.
 
 Install Android NDK **27.1.12297006**, CMake **3.22.1**, and Build Tools **35.0.0**
 (the corresponding `NDK_VERSION`, `CMAKE_VERSION`, and `BUILD_TOOLS_VERSION`
@@ -73,7 +78,7 @@ adb shell am force-stop com.example.ommseam
 adb shell am start -n com.example.ommseam/.MainActivity --ez mask true
 ```
 
-The script clones OMM's 4.0.0 source into `build/maps-core`, initializes its
+The script clones OMM's 4.0.0 source into `build/maps-core-uv`, initializes its
 submodules, applies the patch, and builds `libmapscore.so` for arm64. It replaces
 only that library in the stock debug APK and signs a separate APK with the local
 debug key. Kotlin/Java code, resources, input images, and the published Maven
@@ -161,3 +166,20 @@ label crops use 4x nearest-neighbor enlargement to expose the original pixels.
 and text bounds using all RGB components below 125. These pixel bounds depend
 on sampling and are not font size specifications. Map attribution is retained
 in the full captures.
+
+## Current UV-preserving patch: Lenovo validation
+
+On Lenovo TB520FU / Android 16 / arm64, the updated patch renders both identical
+labels at **83px ink height**, including the label crossing the tile boundary.
+The unmasked map region is pixel-identical to stock OMM 4.0.0. These screenshots
+use only this repository's Android Canvas/OMM reproduction.
+
+![Current masked rendering](evidence/uv-preserving/masked.png)
+
+[Stock unmasked](evidence/uv-preserving/unmasked-stock.png),
+[patched unmasked](evidence/uv-preserving/unmasked-patched.png), and
+[verification script](scripts/verify-uv-evidence.py).
+
+The MapConductor overzoom investigation also found rounding differences in the
+source MVT road geometry. That is separate from the OMM texture mapping bug and
+is not part of the OMM patch or this standalone reproduction.
